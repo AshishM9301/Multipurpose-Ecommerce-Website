@@ -81,6 +81,10 @@ async function initializeDatabase() {
         quantity INTEGER NOT NULL,
         price DECIMAL(10, 2) NOT NULL
       );
+
+      -- Add image_path column to products table
+      ALTER TABLE products
+      ADD COLUMN image_path VARCHAR(255);
     `);
     console.log('Database tables created successfully');
   } catch (error) {

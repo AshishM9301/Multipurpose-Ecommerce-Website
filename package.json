@@ -2,13 +2,13 @@
   "name": "multipurpose-ecommerce-website",
   "version": "0.1.0",
   "private": true,
-  "type": "commonjs",
+  "type": "module",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "setup-db": "npx ts-node src/scripts/setupDatabase.js"
+    "setup-db": "node src/scripts/setupDatabase.js"
   },
   "dependencies": {
     "@heroicons/react": "^2.1.5",
@@ -22,7 +22,8 @@
     "pg": "^8.12.0",
     "react": "^18",
     "react-cookie": "^7.2.0",
-    "react-dom": "^18"
+    "react-dom": "^18",
+    "react-dropzone": "^14.2.3"
   },
   "devDependencies": {
     "@types/bcrypt": "^5.0.2",

@@ -1,73 +1,55 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useAuth, roleRoutes } from '@/contexts/AuthContext';
 import Link from 'next/link';
-import { getAuthStatus, clearAuthStatusCache } from '@/utility/auth';
 
-export default function Login() {
-
-
-    const router = useRouter();
-    const [isLoading, setIsLoading] = useState(true);
-
-    // useEffect(() => {
-    //     const timeoutId = setTimeout(async () => {
-    //         await checkAuth();
-    //     }, 5000); // 5 seconds timeout
-
-    //     return () => clearTimeout(timeoutId);
-    // }, [router]);
-
-    // async function checkAuth() {
-    //     try {
-    //         const authStatus = await getAuthStatus();
-    //         console.log(authStatus);
-    //         if (authStatus) {
-    //             clearAuthStatusCache();
-    //             router.push('/account-overview');
-    //         }
-    //     } catch (error) {
-    //         console.error('Error checking auth status:', error);
-    //     } finally {
-    //         setIsLoading(false);
-    //     }
-    // }
-
+export default function CustomerLogin() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [redirectUrl, setRedirectUrl] = useState<string | null>(null);
+    const { login, user, loading, checkAuth } = useAuth();
 
+    useEffect(() => {
+        const redirectIfAuthenticated = async () => {
+            const authUser = await checkAuth();
+            if (authUser) {
+                setRedirectUrl(roleRoutes[authUser.role]);
+            }
+        };
+        redirectIfAuthenticated();
+    }, []);
+
+    useEffect(() => {
+        if (redirectUrl) {
+            window.location.href = redirectUrl;
+        }
+    }, [redirectUrl]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
         try {
-            const response = await fetch('/api/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-                localStorage.setItem('token', data.token);
-                localStorage.setItem('userRole', data.user.role);
-                router.push('/account-overview');
+            const result = await login(email, password, true);
+            if (result.success && result.redirectUrl) {
+                setRedirectUrl(result.redirectUrl);
             } else {
-                const errorData = await response.json();
-                setError(errorData.error || 'Login failed. Please try again.');
+                setError('Login failed. Please try again.');
             }
         } catch (err) {
-            console.error('Login error:', err);
-            setError('An unexpected error occurred. Please try again.');
+            setError('An error occurred. Please try again.');
         }
     };
 
-    // if (isLoading) {
-    //     return <div>Loading...</div>;
-    // }
+    if (loading) {
+        return <div>Loading...</div>;
+    }
+
+    if (redirectUrl) {
+        return <div>Redirecting...</div>;
+    }
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-white">

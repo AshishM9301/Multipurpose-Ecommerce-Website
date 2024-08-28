@@ -38,8 +38,10 @@ export default function SellerRegister() {
             return;
         }
 
+        console.log(formData);
+
         try {
-            const response = await fetch('/api/seller/register', {
+            const response = await fetch('/api/auth/seller/register', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData),
