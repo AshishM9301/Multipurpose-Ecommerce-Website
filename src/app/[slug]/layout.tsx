@@ -14,8 +14,9 @@ function DashboardLayout({ children }: { children: React.ReactNode }) {
     const navItems = [
         { href: '/dashboard', label: 'Dashboard', roles: ['super_admin', 'admin', 'seller', 'customer'] },
         { href: '/admin/users', label: 'Manage Users', roles: ['super_admin', 'admin'] },
+        { href: '/admin/brands', label: 'Manage Brands', roles: ['super_admin', 'admin'] },
+        { href: '/admin/categories', label: 'Manage Categories', roles: ['super_admin', 'admin'] },
         { href: '/admin/settings', label: 'Platform Settings', roles: ['super_admin'] },
-        { href: '/seller/add-product', label: 'Add Product', roles: ['super_admin', 'seller'] },
         { href: '/seller/products', label: 'Seller Products', roles: ['super_admin', 'seller'] },
         { href: '/customer/orders', label: 'My Orders', roles: ['super_admin', 'customer'] },
         { href: '/customer/profile', label: 'My Profile', roles: ['super_admin', 'customer'] },

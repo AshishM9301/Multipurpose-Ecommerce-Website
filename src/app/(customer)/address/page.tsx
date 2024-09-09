@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { PencilIcon, TrashIcon } from '@heroicons/react/24/outline';
+import AddressForm from '@/components/AddressForm'; // Import the AddressForm component
+import { Drawer } from '@/components/Drawer';
 
 interface Address {
     id: number;
@@ -20,6 +22,7 @@ const Address = () => {
     const [addresses, setAddresses] = useState<Address[]>([]);
     const [primaryAddressId, setPrimaryAddressId] = useState<number | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [isDrawerOpen, setIsDrawerOpen] = useState(false); // State for drawer visibility
     const router = useRouter();
 
     useEffect(() => {
@@ -78,6 +81,27 @@ const Address = () => {
         }
     };
 
+    const handleAddAddress = async (formData: Address) => {
+        try {
+            const response = await fetch('/api/addresses', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData),
+            });
+
+            if (response.ok) {
+                fetchAddresses(); // Refresh the addresses list
+                setIsDrawerOpen(false); // Close the drawer
+            } else {
+                console.error('Failed to add address');
+            }
+        } catch (error) {
+            console.error('Error adding address:', error);
+        }
+    };
+
     if (isLoading) {
         return <div>Loading addresses...</div>;
     }
@@ -86,9 +110,12 @@ const Address = () => {
         <div className="container mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-6">
                 <h1 className="text-3xl font-bold">My Addresses</h1>
-                <Link href="/address/add-address" className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300">
+                <button
+                    onClick={() => setIsDrawerOpen(true)} // Open the drawer
+                    className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 transition duration-300"
+                >
                     Add New Address
-                </Link>
+                </button>
             </div>
             <div className="space-y-4">
                 {addresses.map((address) => (
@@ -124,6 +151,13 @@ const Address = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Drawer for Adding Address */}
+
+            <Drawer children={
+                <AddressForm onSubmit={handleAddAddress} />
+            } isOpen={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} />
+
         </div>
     );
 };

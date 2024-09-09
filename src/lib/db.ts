@@ -7,7 +7,7 @@ console.log('Environment variables:', {
   DB_PORT: process.env.DB_PORT,
 });
 
-export const pool = new Pool({
+const pool = new Pool({
   user: process.env.DB_USER,
   host: process.env.DB_HOST,
   database: process.env.DB_NAME,
@@ -19,3 +19,5 @@ export const pool = new Pool({
 });
 
 console.log('Pool created:', pool !== undefined);
+
+export { pool };

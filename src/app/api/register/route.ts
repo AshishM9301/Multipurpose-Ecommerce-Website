@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { pool } from '@/lib/db';
 
 export async function POST(request: Request) {
-  const { fullName, email, password } = await request.json();
+  const { firstName, lastName, email, password } = await request.json();
 
   try {
     // Check if user already exists
@@ -18,8 +18,8 @@ export async function POST(request: Request) {
 
     // Insert new user
     const result = await pool.query(
-      'INSERT INTO users (full_name, email, password, role) VALUES ($1, $2, $3, $4) RETURNING id, email, role',
-      [fullName, email, hashedPassword, 'customer']
+      'INSERT INTO users (first_name, last_name, email, password, role) VALUES ($1, $2, $3, $4, $5) RETURNING id, email, role',
+      [firstName, lastName, email, hashedPassword, 'customer']
     );
 
     const newUser = result.rows[0];

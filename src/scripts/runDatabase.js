@@ -1,5 +1,4 @@
-const { initializeDatabase } = require('../lib/setupDatabase');
-
+import { initializeDatabase } from '../lib/setupDatabase.js';
 initializeDatabase()
   .then(() => {
     console.log('Database setup complete');

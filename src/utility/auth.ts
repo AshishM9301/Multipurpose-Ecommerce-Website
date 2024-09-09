@@ -5,10 +5,6 @@ import { useCookies } from 'react-cookie';
 let cachedAuthStatus = null;
 
 export async function getAuthStatus() {
-  if (cachedAuthStatus) {
-    return cachedAuthStatus;
-  }
-
   try {
     const response = await fetch('/api/auth', {
       method: 'GET',
@@ -17,8 +13,7 @@ export async function getAuthStatus() {
       },
     });
     const data = await response.json();
-    cachedAuthStatus = data.isAuthenticated ? data.user : null;
-    return cachedAuthStatus;
+    return data.isAuthenticated ? data.user : null;
   } catch (error) {
     console.error('Error checking auth status:', error);
     return null;

@@ -1,4 +1,4 @@
-const { pool } = require('./db');
+import { pool } from './db'; // Ensure the correct path and file extension
 
 async function initializeDatabase() {
   const client = await pool.connect();
@@ -37,7 +37,7 @@ async function initializeDatabase() {
       ALTER TABLE users
       ADD COLUMN first_name VARCHAR(255) NOT NULL,
       ADD COLUMN last_name VARCHAR(255) NOT NULL,
-      ADD COLUMN phone VARCHAR(20),
+      ADD COLUMN phone VARCHAR(20);
 
       CREATE TABLE IF NOT EXISTS sellers (
         id SERIAL PRIMARY KEY,
@@ -52,13 +52,14 @@ async function initializeDatabase() {
         description TEXT,
         price DECIMAL(10, 2) NOT NULL,
         seller_id INTEGER REFERENCES users(id),
-        category_id INTEGER,
-        brand_id INTEGER
+        category_id INTEGER REFERENCES categories(id),
+        brand_id INTEGER REFERENCES brands(id)
       );
 
       CREATE TABLE IF NOT EXISTS categories (
         id SERIAL PRIMARY KEY,
-        name VARCHAR(255) NOT NULL
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL
       );
 
       CREATE TABLE IF NOT EXISTS brands (
@@ -82,9 +83,71 @@ async function initializeDatabase() {
         price DECIMAL(10, 2) NOT NULL
       );
 
+      CREATE TABLE reviews (
+        id SERIAL PRIMARY KEY,
+        product_id INTEGER NOT NULL,
+        user_id INTEGER,
+        name VARCHAR(255),
+        email VARCHAR(255),
+        review_text TEXT,
+        rating INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (product_id) REFERENCES products(id),
+        FOREIGN KEY (user_id) REFERENCES users(id)
+      );
+
+      CREATE TABLE IF NOT EXISTS cart_items (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER REFERENCES users(id),
+        product_id INTEGER REFERENCES products(id),
+        quantity INTEGER NOT NULL,
+        UNIQUE(user_id, product_id)
+      );
+
       -- Add image_path column to products table
       ALTER TABLE products
       ADD COLUMN image_path VARCHAR(255);
+
+      -- Add is_active column to categories table
+      ALTER TABLE categories
+      ADD COLUMN is_active BOOLEAN DEFAULT TRUE;  
+
+      -- Add is_active column to brands table
+      ALTER TABLE brands
+      ADD COLUMN is_active BOOLEAN DEFAULT TRUE;  
+
+      -- Add stock_quantity column to products table
+      ALTER TABLE products
+      ADD COLUMN stock_quantity INTEGER DEFAULT 0;
+
+      -- Add missing columns if they don't exist
+      DO $$
+      BEGIN
+
+      END $$;
+
+      -- Add new columns if they don't exist
+      DO $$
+      BEGIN
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'rating') THEN
+          ALTER TABLE products ADD COLUMN rating DECIMAL(3, 2);
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'review_count') THEN
+          ALTER TABLE products ADD COLUMN review_count INTEGER DEFAULT 0;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'discount_percentage') THEN
+          ALTER TABLE products ADD COLUMN discount_percentage DECIMAL(5, 2) DEFAULT 0;
+        END IF;
+
+        IF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'products' AND column_name = 'original_price') THEN
+          ALTER TABLE products ADD COLUMN original_price DECIMAL(10, 2);
+        END IF;
+      END $$;
+
+      -- Add is_active column to products table
+      ALTER TABLE products ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
     `);
     console.log('Database tables created successfully');
   } catch (error) {
@@ -95,3 +158,5 @@ async function initializeDatabase() {
 }
 
 module.exports = { initializeDatabase };
+
+

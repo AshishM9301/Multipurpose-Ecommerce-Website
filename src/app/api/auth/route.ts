@@ -8,37 +8,24 @@ export async function GET() {
   const authToken = cookieStore.get('auth_token');
   const adminToken = cookieStore.get('adminToken');
 
-  let isAuthenticated = false;
-  let user = null;
-
   try {
     if (authToken || adminToken) {
       const token = authToken?.value || adminToken?.value;
       if (token) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret') as { userId: string; email: string; role: string };
 
-        if (decoded.role === 'admin' || decoded.role === 'super_admin') {
-          isAuthenticated = true;
-          user = decoded;
-          return NextResponse.json({ isAuthenticated: true, user: decoded });
-        }
-        else {
-          throw new Error('Unauthorized');
-        }
 
-
-
+        return NextResponse.json({ isAuthenticated: true, user: decoded });
 
       }
-
     }
-  } catch (error) {
-    // Token verification failed, isAuthenticated remains false
+    // If no token is found or it's invalid
     return NextResponse.json({ isAuthenticated: false });
+  } catch (error) {
+    console.error('Authentication error:', error);
+    return NextResponse.json({ isAuthenticated: false, error: 'Authentication failed' }, { status: 500 });
   }
 }
-
-
 
 export async function verifyToken(token: string): Promise<number | null> {
   return new Promise((resolve, reject) => {
@@ -48,8 +35,6 @@ export async function verifyToken(token: string): Promise<number | null> {
     });
   });
 }
-
-
 
 export async function getUserRole(userId: string): Promise<string> {
   const client = await pool.connect();

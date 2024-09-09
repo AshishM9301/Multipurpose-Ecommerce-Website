@@ -13,9 +13,12 @@ export default function CustomerLayout({
     const router = useRouter();
     const [isLoading, setIsLoading] = useState(true);
 
+
+
     useEffect(() => {
         async function checkAuth() {
             const authStatus = await getAuthStatus();
+            console.log(authStatus)
             if (!authStatus || authStatus.role !== 'customer') {
                 router.push('/login');
             }

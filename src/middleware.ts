@@ -11,7 +11,7 @@ export async function middleware(request: NextRequest) {
   const data = await response.json();
 
   if (!data.isAuthenticated) {
-    return NextResponse.redirect(new URL('/member-login', request.url));
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // Add role-based routing logic here if needed
@@ -20,5 +20,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/admin/:path*', '/seller/:path*', '/account/:path*'],
+  matcher: ['/admin/:path*', '/seller/:path*', '/account/:path*', '/checkout'],
 };

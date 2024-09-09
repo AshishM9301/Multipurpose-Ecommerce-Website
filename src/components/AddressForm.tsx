@@ -102,7 +102,7 @@ const AddressForm: React.FC<AddressFormProps> = ({ initialData, onSubmit, showDe
         }
     };
 
-    const inputClasses = "block w-full rounded-full border-gray-300 px-4 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 py-2";
+    const inputClasses = "block w-full rounded-full mt-2 border border-gray-300 px-4 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 py-2";
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6">

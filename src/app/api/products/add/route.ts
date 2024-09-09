@@ -1,58 +1,64 @@
-import { NextResponse } from 'next/server';
-import { writeFile, mkdir } from 'fs/promises';
-import path from 'path';
-import pool from '@/lib/db';
+import { NextRequest, NextResponse } from 'next/server';
+import { pool } from '@/lib/db';
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
     try {
         const formData = await request.formData();
         const name = formData.get('name') as string;
-        const price = formData.get('price') as string;
+        const price = parseFloat(formData.get('price') as string);
         const description = formData.get('description') as string;
-        const sellerId = formData.get('seller_id') as string; // You'll need to pass this from the frontend
-        const categoryId = formData.get('category_id') as string; // Optional
-        const brandId = formData.get('brand_id') as string; // Optional
-        const image = formData.get('image') as File | null;
-
-        // Validate the input
-        if (!name || !price || !description || !sellerId) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
-        }
+        const stock_quantity = parseInt(formData.get('stock_quantity') as string, 10);
+        const seller_id = parseInt(formData.get('seller_id') as string, 10);
+        const category_id = parseInt(formData.get('category_id') as string, 10);
+        const brand_id = parseInt(formData.get('brand_id') as string, 10);
 
         // Handle image upload
+        const image = formData.get('image') as File;
         let imagePath = '';
+
         if (image) {
-            const bytes = await image.arrayBuffer();
-            const buffer = Buffer.from(bytes);
+            const buffer = await image.arrayBuffer();
+            const bytes = new Uint8Array(buffer);
             const fileName = `${Date.now()}-${image.name}`;
-            const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-
-            // Create the uploads directory if it doesn't exist
-            try {
-                await mkdir(uploadsDir, { recursive: true });
-            } catch (err) {
-                if (err.code !== 'EEXIST') throw err;
-            }
-
-            const filePath = path.join(uploadsDir, fileName);
-            await writeFile(filePath, buffer);
             imagePath = `/uploads/${fileName}`;
+
+            // Ensure the uploads directory exists
+            const fs = require('fs').promises;
+            await fs.mkdir('./public/uploads', { recursive: true });
+
+            // Write the file
+            await fs.writeFile(`./public${imagePath}`, bytes);
         }
 
-        // Add the product to the database
+        if (!name || isNaN(price) || !description || isNaN(stock_quantity) || isNaN(seller_id) || isNaN(category_id) || isNaN(brand_id)) {
+            return NextResponse.json({ error: 'Invalid input data' }, { status: 400 });
+        }
+
         const client = await pool.connect();
         try {
-            const result = await client.query(
-                'INSERT INTO products (name, description, price, seller_id, category_id, brand_id, image_path) VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING *',
-                [name, description, parseFloat(price), parseInt(sellerId), categoryId ? parseInt(categoryId) : null, brandId ? parseInt(brandId) : null, imagePath]
-            );
-            const newProduct = result.rows[0];
-            return NextResponse.json({ message: 'Product added successfully', product: newProduct }, { status: 201 });
+            await client.query('BEGIN');
+
+            const insertProductQuery = `
+                INSERT INTO products (name, price, description, stock_quantity, seller_id, category_id, brand_id, image_path)
+                VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                RETURNING id
+            `;
+            const result = await client.query(insertProductQuery, [name, price, description, stock_quantity, seller_id, category_id, brand_id, imagePath]);
+
+            const productId = result.rows[0].id;
+
+            await client.query('COMMIT');
+
+            return NextResponse.json({ message: 'Product added successfully', productId }, { status: 201 });
+        } catch (error) {
+            await client.query('ROLLBACK');
+            console.error('Error adding product:', error);
+            return NextResponse.json({ error: 'Failed to add product' }, { status: 500 });
         } finally {
             client.release();
         }
     } catch (error) {
-        console.error('Error adding product:', error);
-        return NextResponse.json({ error: 'Failed to add product' }, { status: 500 });
+        console.error('Error processing request:', error);
+        return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
 }
